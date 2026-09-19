@@ -1,8 +1,8 @@
 {
-  "translations": 1256,
-  "chapters_written": 521565,
+  "translations": 51,
+  "chapters_written": 48641,
   "chapters_skipped": 0,
-  "book_files": 521565,
-  "corpus_files": 521565,
-  "verse_jsonl_records": 14507328
+  "book_files": 48641,
+  "corpus_files": 48641,
+  "verse_jsonl_records": 1288725
 }

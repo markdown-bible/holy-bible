@@ -1,5 +1,0 @@
-Copied from HelloAO bible.db; db sha256 8e3d7faec7d0cf15b7a289ddb2de6d13717e645600026491ee6759319073a6e1
-
-Translation: Ɨ niuucari tɨ jejcua, tɨ ajta jɨme'en ra'axa a'ɨjna ɨ tavastara'a, ɨ Cɨriistu'u tɨ ji'i Jesús tɨ̀ tu'irájtuaa (crn_wbt)
-License URL: https://ebible.org/Scriptures/details.php?id=crnNT
-
