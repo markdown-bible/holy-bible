@@ -13,7 +13,20 @@ import (
 )
 
 type Options struct {
-	Strict bool
+	Strict    bool
+	Languages []string
+}
+
+func matchLanguage(tr db.Translation, langs []string) bool {
+	if len(langs) == 0 {
+		return true
+	}
+	for _, l := range langs {
+		if tr.Language == l || tr.ID == l {
+			return true
+		}
+	}
+	return false
 }
 
 func Run(ctx context.Context, cfg config.Config, store *db.Store, opts Options) error {
@@ -24,6 +37,9 @@ func Run(ctx context.Context, cfg config.Config, store *db.Store, opts Options) 
 
 	var warnings []string
 	for _, tr := range translations {
+		if !matchLanguage(tr, opts.Languages) {
+			continue
+		}
 		if tr.LicenseURL == "" {
 			return fmt.Errorf("translation %s: empty licenseUrl", tr.ID)
 		}
@@ -49,15 +65,18 @@ func Run(ctx context.Context, cfg config.Config, store *db.Store, opts Options) 
 			warnings = append(warnings, fmt.Sprintf("translation %s: zero chapters", tr.ID))
 		}
 
-		lang := db.LangDir(tr.Language)
-		sample := filepath.Join(cfg.BookDir, lang, tr.ID)
+		sample := db.TranslationRoot(cfg.BookDir, tr.ID)
 		if _, err := os.Stat(sample); err != nil {
 			warnings = append(warnings, fmt.Sprintf("translation %s: missing book dir %s", tr.ID, sample))
 		}
 
 		licPath := filepath.Join(cfg.ManifestDir, "licenses", tr.ID+".txt")
 		if _, err := os.Stat(licPath); err != nil {
-			return fmt.Errorf("translation %s: missing license snapshot %s", tr.ID, licPath)
+			if len(opts.Languages) > 0 {
+				warnings = append(warnings, fmt.Sprintf("translation %s: missing license snapshot %s", tr.ID, licPath))
+			} else {
+				return fmt.Errorf("translation %s: missing license snapshot %s", tr.ID, licPath)
+			}
 		}
 	}
 

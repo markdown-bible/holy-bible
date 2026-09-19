@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"path/filepath"
 
 	_ "modernc.org/sqlite"
 )
@@ -40,13 +41,13 @@ type Translation struct {
 }
 
 type Book struct {
-	TranslationID   string
-	ID              string
-	Name            string
-	CommonName      string
-	Order           int
+	TranslationID    string
+	ID               string
+	Name             string
+	CommonName       string
+	Order            int
 	NumberOfChapters int
-	IsApocryphal    sql.NullBool
+	IsApocryphal     sql.NullBool
 }
 
 type Chapter struct {
@@ -194,6 +195,10 @@ func (s *Store) CountVerses(ctx context.Context, translationID string) (int, err
 	var n int
 	err := s.db.QueryRowContext(ctx, `SELECT COUNT(*) FROM ChapterVerse WHERE translationId = ?`, translationID).Scan(&n)
 	return n, err
+}
+
+func TranslationRoot(base, translationID string) string {
+	return filepath.Join(base, translationID)
 }
 
 func ChapterFileName(number int) string {

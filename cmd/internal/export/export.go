@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"sort"
 	"strings"
 	"sync"
 	"sync/atomic"
@@ -69,7 +70,23 @@ type job struct {
 	chapterNum  int
 }
 
-func Build(ctx context.Context, cfg config.Config, store *db.Store, dbSHA256, schemaFP string) (Result, error) {
+type BuildOptions struct {
+	Languages []string
+}
+
+func matchLanguage(tr db.Translation, langs []string) bool {
+	if len(langs) == 0 {
+		return true
+	}
+	for _, l := range langs {
+		if tr.Language == l || tr.ID == l {
+			return true
+		}
+	}
+	return false
+}
+
+func Build(ctx context.Context, cfg config.Config, store *db.Store, dbSHA256, schemaFP string, opts BuildOptions) (Result, error) {
 	var res Result
 	res.Manifest = BuildManifest{
 		SourceURL:         cfg.DownloadURL,
@@ -82,6 +99,9 @@ func Build(ctx context.Context, cfg config.Config, store *db.Store, dbSHA256, sc
 	statePath := filepath.Join(cfg.ManifestDir, "build.state.json")
 	prevState := loadState(statePath)
 	newState := BuildState{Chapters: map[string]string{}}
+	for k, v := range prevState.Chapters {
+		newState.Chapters[k] = v
+	}
 	var stateMu sync.Mutex
 
 	if err := os.MkdirAll(cfg.ManifestDir, 0o755); err != nil {
@@ -94,6 +114,22 @@ func Build(ctx context.Context, cfg config.Config, store *db.Store, dbSHA256, sc
 	translations, err := store.ListTranslations(ctx)
 	if err != nil {
 		return res, err
+	}
+	langs := opts.Languages
+	if len(langs) == 0 {
+		langs = cfg.Languages
+	}
+	var filtered []db.Translation
+	for _, tr := range translations {
+		if matchLanguage(tr, langs) {
+			filtered = append(filtered, tr)
+		}
+	}
+	if len(langs) > 0 && len(filtered) == 0 {
+		return res, fmt.Errorf("no translations matched languages: %v", langs)
+	}
+	if len(filtered) > 0 {
+		translations = filtered
 	}
 	res.Stats.Translations = len(translations)
 
@@ -130,9 +166,8 @@ func Build(ctx context.Context, cfg config.Config, store *db.Store, dbSHA256, sc
 			}
 			footnotes, _ := store.ListChapterFootnotes(ctx, j.translation.ID, j.book.ID, j.chapterNum)
 
-			lang := db.LangDir(j.translation.Language)
-			bookPath := filepath.Join(cfg.BookDir, lang, j.translation.ID, j.book.ID, db.ChapterFileName(j.chapterNum))
-			corpusPath := filepath.Join(cfg.CorpusDir, lang, j.translation.ID, j.book.ID, db.ChapterFileName(j.chapterNum))
+			bookPath := filepath.Join(db.TranslationRoot(cfg.BookDir, j.translation.ID), j.book.ID, db.ChapterFileName(j.chapterNum))
+			corpusPath := filepath.Join(db.TranslationRoot(cfg.CorpusDir, j.translation.ID), j.book.ID, db.ChapterFileName(j.chapterNum))
 
 			notice := ""
 			if j.translation.LicenseNotice.Valid {
@@ -207,7 +242,6 @@ func Build(ctx context.Context, cfg config.Config, store *db.Store, dbSHA256, sc
 			return res, err
 		}
 
-		lang := db.LangDir(tr.Language)
 		rec := TranslationRecord{
 			ID:            tr.ID,
 			Name:          tr.Name,
@@ -216,8 +250,8 @@ func Build(ctx context.Context, cfg config.Config, store *db.Store, dbSHA256, sc
 			Language:      tr.Language,
 			Website:       tr.Website,
 			LicenseURL:    tr.LicenseURL,
-			BookDir:       filepath.ToSlash(filepath.Join(cfg.BookDir, lang, tr.ID)),
-			CorpusDir:     filepath.ToSlash(filepath.Join(cfg.CorpusDir, lang, tr.ID)),
+			BookDir:       filepath.ToSlash(db.TranslationRoot(cfg.BookDir, tr.ID)),
+			CorpusDir:     filepath.ToSlash(db.TranslationRoot(cfg.CorpusDir, tr.ID)),
 			ChapterCount:  chCount,
 			VerseCount:    vCount,
 		}
@@ -241,7 +275,7 @@ func Build(ctx context.Context, cfg config.Config, store *db.Store, dbSHA256, sc
 			return res, err
 		}
 
-		jsonlPath := filepath.Join(cfg.CorpusDir, lang, tr.ID, "verses.jsonl")
+		jsonlPath := filepath.Join(db.TranslationRoot(cfg.CorpusDir, tr.ID), "verses.jsonl")
 		if err := os.MkdirAll(filepath.Dir(jsonlPath), 0o755); err != nil {
 			return res, err
 		}
@@ -300,7 +334,11 @@ func Build(ctx context.Context, cfg config.Config, store *db.Store, dbSHA256, sc
 	if err := writeJSON(filepath.Join(cfg.ManifestDir, "stats.json"), res.Stats); err != nil {
 		return res, err
 	}
-	if err := writeJSON(filepath.Join(cfg.ManifestDir, "translations.json"), map[string]any{"translations": records}); err != nil {
+	merged, err := mergeTranslationRecords(cfg, records)
+	if err != nil {
+		return res, err
+	}
+	if err := writeJSON(filepath.Join(cfg.ManifestDir, "translations.json"), map[string]any{"translations": merged}); err != nil {
 		return res, err
 	}
 
@@ -346,6 +384,36 @@ func loadState(path string) BuildState {
 
 func saveState(path string, st BuildState) error {
 	return writeJSON(path, st)
+}
+
+func mergeTranslationRecords(cfg config.Config, built []TranslationRecord) ([]TranslationRecord, error) {
+	path := filepath.Join(cfg.ManifestDir, "translations.json")
+	byID := map[string]TranslationRecord{}
+	if data, err := os.ReadFile(path); err == nil {
+		var existing struct {
+			Translations []TranslationRecord `json:"translations"`
+		}
+		if err := json.Unmarshal(data, &existing); err != nil {
+			return nil, err
+		}
+		for _, r := range existing.Translations {
+			byID[r.ID] = r
+		}
+	}
+	for _, r := range built {
+		byID[r.ID] = r
+	}
+	out := make([]TranslationRecord, 0, len(byID))
+	for _, r := range byID {
+		out = append(out, r)
+	}
+	sort.Slice(out, func(i, j int) bool {
+		if out[i].Language != out[j].Language {
+			return out[i].Language < out[j].Language
+		}
+		return out[i].ID < out[j].ID
+	})
+	return out, nil
 }
 
 func writeLicenseSnapshot(cfg config.Config, tr db.Translation, dbSHA256 string) error {

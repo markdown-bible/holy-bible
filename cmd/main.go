@@ -8,6 +8,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/markdown-bible/holy-bible/cmd/internal/clean"
 	"github.com/markdown-bible/holy-bible/cmd/internal/config"
 	"github.com/markdown-bible/holy-bible/cmd/internal/db"
 	"github.com/markdown-bible/holy-bible/cmd/internal/download"
@@ -35,10 +36,26 @@ Usage:
   bible update [--force]
   bible sync [--force]
   bible schema check|refresh
-  bible build
-  bible validate [--strict]
+  bible build [-lang eng[,asm...]]
+  bible clean [-lang eng] [-legacy-lang-dirs]
+  bible validate [--strict] [-lang eng]
 
 `)
+}
+
+func parseLanguages(s string, cfg config.Config) []string {
+	if s == "" {
+		return cfg.Languages
+	}
+	parts := strings.Split(s, ",")
+	var out []string
+	for _, p := range parts {
+		p = strings.TrimSpace(p)
+		if p != "" {
+			out = append(out, p)
+		}
+	}
+	return out
 }
 
 func run(cmd string, args []string, cfgPath string) error {
@@ -58,10 +75,10 @@ func run(cmd string, args []string, cfgPath string) error {
 		if err := cmdSchemaCheck(cfg); err != nil {
 			return err
 		}
-		if err := cmdBuild(cfg); err != nil {
+		if err := cmdBuild(cfg, parseLanguages("", cfg)); err != nil {
 			return err
 		}
-		return cmdValidate(cfg, false)
+		return cmdValidate(cfg, false, nil)
 	case "sync":
 		fs := flag.NewFlagSet("sync", flag.ExitOnError)
 		force := fs.Bool("force", false, "force re-download")
@@ -80,12 +97,22 @@ func run(cmd string, args []string, cfgPath string) error {
 			return fmt.Errorf("unknown schema subcommand: %s", args[0])
 		}
 	case "build":
-		return cmdBuild(cfg)
+		fs := flag.NewFlagSet("build", flag.ExitOnError)
+		lang := fs.String("lang", "", "comma-separated language codes (e.g. eng,asm)")
+		_ = fs.Parse(args)
+		return cmdBuild(cfg, parseLanguages(*lang, cfg))
+	case "clean":
+		fs := flag.NewFlagSet("clean", flag.ExitOnError)
+		lang := fs.String("lang", "", "comma-separated language codes to remove")
+		legacy := fs.Bool("legacy-lang-dirs", true, "also remove book/{lang}/ and corpus/{lang}/ trees")
+		_ = fs.Parse(args)
+		return cmdClean(cfg, parseLanguages(*lang, cfg), *legacy)
 	case "validate":
 		fs := flag.NewFlagSet("validate", flag.ExitOnError)
 		strict := fs.Bool("strict", false, "fail on warnings")
+		lang := fs.String("lang", "", "only validate these languages")
 		_ = fs.Parse(args)
-		return cmdValidate(cfg, *strict)
+		return cmdValidate(cfg, *strict, parseLanguages(*lang, cfg))
 	default:
 		return fmt.Errorf("unknown command: %s", cmd)
 	}
@@ -132,7 +159,7 @@ func cmdSchemaRefresh(cfg config.Config) error {
 	return nil
 }
 
-func cmdBuild(cfg config.Config) error {
+func cmdBuild(cfg config.Config, langs []string) error {
 	if _, err := os.Stat(cfg.DBPath); err != nil {
 		return fmt.Errorf("database missing at %s (run: bible sync)", cfg.DBPath)
 	}
@@ -156,16 +183,37 @@ func cmdBuild(cfg config.Config) error {
 	defer store.Close()
 
 	ctx := context.Background()
-	res, err := export.Build(ctx, cfg, store, dbSHA, snap.Fingerprint)
+	res, err := export.Build(ctx, cfg, store, dbSHA, snap.Fingerprint, export.BuildOptions{Languages: langs})
 	if err != nil {
 		return err
+	}
+	if len(langs) > 0 {
+		fmt.Printf("build: languages=%v ", langs)
 	}
 	fmt.Printf("build: chapters written=%d skipped=%d book_files=%d corpus_files=%d verses_jsonl=%d\n",
 		res.Stats.ChaptersWritten, res.Stats.ChaptersSkipped, res.Stats.BookFiles, res.Stats.CorpusFiles, res.Stats.VerseJSONLRecords)
 	return nil
 }
 
-func cmdValidate(cfg config.Config, strict bool) error {
+func cmdClean(cfg config.Config, langs []string, legacy bool) error {
+	store, err := db.Open(cfg.DBPath)
+	if err != nil {
+		return err
+	}
+	defer store.Close()
+	ctx := context.Background()
+	if err := clean.Run(ctx, cfg, store, clean.Options{Languages: langs, LegacyLangDirs: legacy}); err != nil {
+		return err
+	}
+	if len(langs) == 0 {
+		fmt.Println("clean: removed all translation export dirs (per database)")
+	} else {
+		fmt.Printf("clean: removed export for languages %v\n", langs)
+	}
+	return nil
+}
+
+func cmdValidate(cfg config.Config, strict bool, langs []string) error {
 	if _, err := os.Stat(cfg.DBPath); err != nil {
 		return fmt.Errorf("database missing at %s", cfg.DBPath)
 	}
@@ -175,7 +223,7 @@ func cmdValidate(cfg config.Config, strict bool) error {
 	}
 	defer store.Close()
 	ctx := context.Background()
-	if err := validate.Run(ctx, cfg, store, validate.Options{Strict: strict}); err != nil {
+	if err := validate.Run(ctx, cfg, store, validate.Options{Strict: strict, Languages: langs}); err != nil {
 		return err
 	}
 	if err := validate.SpotCheckContent(ctx, store, "BSB", "GEN", 1); err != nil {

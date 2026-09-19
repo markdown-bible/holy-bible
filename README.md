@@ -4,12 +4,19 @@ Markdown corpus of Bible translations exported from the [Free Use Bible API](htt
 
 ## Layout
 
-| Path | Purpose |
-|------|---------|
-| `book/` | Human-readable markdown (headings, poetry, footnotes) |
-| `corpus/` | RAG-oriented markdown + `verses.jsonl` per translation |
-| `manifest/` | Build metadata, translation catalog, license snapshots |
-| `.cache/` | Local `bible.db` (not committed) |
+Paths are **flat by translation id** (no `{lang}/` prefix):
+
+```text
+book/{translationId}/{bookId}/{chapter}.md
+corpus/{translationId}/{bookId}/{chapter}.md
+corpus/{translationId}/verses.jsonl
+manifest/translations.json
+manifest/licenses/{translationId}.txt
+```
+
+Example: `book/BSB/GEN/01.md`, `book/asm_irv/MAT/05.md`.
+
+Legacy trees `book/eng/BSB/...` can be removed after rebuilding with `./bible clean -lang eng -legacy-lang-dirs`.
 
 See [LEGAL.md](LEGAL.md) for licensing (Apache 2.0 applies to **tooling only**; scripture is per-translation).
 
@@ -25,33 +32,51 @@ See [LEGAL.md](LEGAL.md) for licensing (Apache 2.0 applies to **tooling only**; 
 go build -o bible ./cmd
 ```
 
-## Full update pipeline
+## Workflow (one language at a time)
 
 ```bash
-./bible update          # sync → schema check → build → validate
-./bible sync            # download bible.db when changed
-./bible schema refresh  # after first sync or HelloAO schema change
+./bible sync
 ./bible schema check
-./bible build
-./bible validate        # add --strict to fail on warnings
+
+# Remove a failed or old layout (optional)
+git clean -fd book corpus    # drop untracked bulk export only
+./bible clean -lang eng      # remove eng translations + book/eng/ legacy dirs
+
+# Export one language
+./bible build -lang eng
+./bible validate -lang eng
+
+# Commit selectively (avoid git add .)
+git add book/BSB corpus/BSB manifest/licenses/BSB.txt
+git add manifest/translations.json manifest/build.json manifest/stats.json
 ```
+
+Build several languages by repeating `-lang` or set `languages: [eng, asm]` in `config.yaml`.
+
+Full pipeline (all translations — large):
+
+```bash
+./bible update
+```
+
+## Commands
+
+| Command | Description |
+|---------|-------------|
+| `./bible build -lang eng` | Export only matching language codes |
+| `./bible clean -lang eng` | Delete export dirs for that language (+ legacy `book/eng/`) |
+| `./bible validate -lang eng` | Validate only those translations |
 
 Configuration: [`config.yaml`](config.yaml).
 
 ## Citation
 
-Use translation name, reference (e.g. `GEN 1:1`), and `license_url` from file front matter or `manifest/translations.json`.
+Use translation name, reference (e.g. `GEN 1:1`), and `license_url` from front matter or `manifest/translations.json`.
 
 ## Tests
 
 ```bash
 go test ./... -race
-```
-
-Integration tests (require `.cache/bible.db`):
-
-```bash
-go test ./... -race -tags=integration
 ```
 
 ## Upstream

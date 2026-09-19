@@ -1,3 +1,4 @@
 .cache/
 bible
 *.test
+manifest/build.state.json

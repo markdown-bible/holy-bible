@@ -16,8 +16,9 @@ type Config struct {
 	Workers                int    `yaml:"workers"`
 	IncludeApocrypha       bool   `yaml:"include_apocrypha"`
 	CorpusStripFootnotes   bool   `yaml:"corpus_strip_footnotes"`
-	RequireRedistributable bool   `yaml:"require_redistributable"`
-	SchemaExpected         string `yaml:"schema_expected"`
+	RequireRedistributable bool     `yaml:"require_redistributable"`
+	SchemaExpected         string   `yaml:"schema_expected"`
+	Languages              []string `yaml:"languages"`
 }
 
 func Default() Config {

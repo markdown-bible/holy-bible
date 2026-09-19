@@ -8,3 +8,5 @@ include_apocrypha: true
 corpus_strip_footnotes: true
 require_redistributable: false
 schema_expected: schema/helloao_expected.json
+# Optional: limit build to these ISO language codes (empty = use -lang flag or all)
+languages: []
