@@ -1,0 +1,10 @@
+db_path: .cache/bible.db
+download_url: https://bible.helloao.org/bible.db
+book_dir: book
+corpus_dir: corpus
+manifest_dir: manifest
+workers: 8
+include_apocrypha: true
+corpus_strip_footnotes: true
+require_redistributable: false
+schema_expected: schema/helloao_expected.json

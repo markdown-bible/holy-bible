@@ -1,0 +1,807 @@
+{
+  "tables": [
+    {
+      "name": "Book",
+      "columns": [
+        {
+          "name": "id",
+          "type": "TEXT"
+        },
+        {
+          "name": "translationId",
+          "type": "TEXT"
+        },
+        {
+          "name": "name",
+          "type": "TEXT"
+        },
+        {
+          "name": "commonName",
+          "type": "TEXT"
+        },
+        {
+          "name": "title",
+          "type": "TEXT"
+        },
+        {
+          "name": "order",
+          "type": "INTEGER"
+        },
+        {
+          "name": "numberOfChapters",
+          "type": "INTEGER"
+        },
+        {
+          "name": "sha256",
+          "type": "TEXT"
+        },
+        {
+          "name": "isApocryphal",
+          "type": "BOOLEAN"
+        }
+      ]
+    },
+    {
+      "name": "Chapter",
+      "columns": [
+        {
+          "name": "number",
+          "type": "INTEGER"
+        },
+        {
+          "name": "bookId",
+          "type": "TEXT"
+        },
+        {
+          "name": "translationId",
+          "type": "TEXT"
+        },
+        {
+          "name": "json",
+          "type": "TEXT"
+        },
+        {
+          "name": "sha256",
+          "type": "TEXT"
+        }
+      ]
+    },
+    {
+      "name": "ChapterAudioTiming",
+      "columns": [
+        {
+          "name": "number",
+          "type": "INTEGER"
+        },
+        {
+          "name": "bookId",
+          "type": "TEXT"
+        },
+        {
+          "name": "translationId",
+          "type": "TEXT"
+        },
+        {
+          "name": "reader",
+          "type": "TEXT"
+        },
+        {
+          "name": "timingsJson",
+          "type": "TEXT"
+        }
+      ]
+    },
+    {
+      "name": "ChapterAudioUrl",
+      "columns": [
+        {
+          "name": "number",
+          "type": "INTEGER"
+        },
+        {
+          "name": "bookId",
+          "type": "TEXT"
+        },
+        {
+          "name": "translationId",
+          "type": "TEXT"
+        },
+        {
+          "name": "reader",
+          "type": "TEXT"
+        },
+        {
+          "name": "url",
+          "type": "TEXT"
+        }
+      ]
+    },
+    {
+      "name": "ChapterFootnote",
+      "columns": [
+        {
+          "name": "id",
+          "type": "INTEGER"
+        },
+        {
+          "name": "chapterNumber",
+          "type": "INTEGER"
+        },
+        {
+          "name": "bookId",
+          "type": "TEXT"
+        },
+        {
+          "name": "translationId",
+          "type": "TEXT"
+        },
+        {
+          "name": "text",
+          "type": "TEXT"
+        },
+        {
+          "name": "verseNumber",
+          "type": "INTEGER"
+        },
+        {
+          "name": "sha256",
+          "type": "TEXT"
+        }
+      ]
+    },
+    {
+      "name": "ChapterVerse",
+      "columns": [
+        {
+          "name": "number",
+          "type": "INTEGER"
+        },
+        {
+          "name": "chapterNumber",
+          "type": "INTEGER"
+        },
+        {
+          "name": "bookId",
+          "type": "TEXT"
+        },
+        {
+          "name": "translationId",
+          "type": "TEXT"
+        },
+        {
+          "name": "text",
+          "type": "TEXT"
+        },
+        {
+          "name": "contentJson",
+          "type": "TEXT"
+        },
+        {
+          "name": "sha256",
+          "type": "TEXT"
+        }
+      ]
+    },
+    {
+      "name": "ChapterWords",
+      "columns": [
+        {
+          "name": "number",
+          "type": "INTEGER"
+        },
+        {
+          "name": "bookId",
+          "type": "TEXT"
+        },
+        {
+          "name": "translationId",
+          "type": "TEXT"
+        },
+        {
+          "name": "wordsJson",
+          "type": "TEXT"
+        }
+      ]
+    },
+    {
+      "name": "Commentary",
+      "columns": [
+        {
+          "name": "id",
+          "type": "TEXT"
+        },
+        {
+          "name": "name",
+          "type": "TEXT"
+        },
+        {
+          "name": "website",
+          "type": "TEXT"
+        },
+        {
+          "name": "licenseUrl",
+          "type": "TEXT"
+        },
+        {
+          "name": "englishName",
+          "type": "TEXT"
+        },
+        {
+          "name": "language",
+          "type": "TEXT"
+        },
+        {
+          "name": "textDirection",
+          "type": "TEXT"
+        },
+        {
+          "name": "sha256",
+          "type": "TEXT"
+        },
+        {
+          "name": "licenseNotes",
+          "type": "TEXT"
+        },
+        {
+          "name": "licenseNotice",
+          "type": "TEXT"
+        }
+      ]
+    },
+    {
+      "name": "CommentaryBook",
+      "columns": [
+        {
+          "name": "id",
+          "type": "TEXT"
+        },
+        {
+          "name": "commentaryId",
+          "type": "TEXT"
+        },
+        {
+          "name": "name",
+          "type": "TEXT"
+        },
+        {
+          "name": "commonName",
+          "type": "TEXT"
+        },
+        {
+          "name": "introduction",
+          "type": "TEXT"
+        },
+        {
+          "name": "order",
+          "type": "INTEGER"
+        },
+        {
+          "name": "numberOfChapters",
+          "type": "INTEGER"
+        },
+        {
+          "name": "sha256",
+          "type": "TEXT"
+        },
+        {
+          "name": "introductionSummary",
+          "type": "TEXT"
+        }
+      ]
+    },
+    {
+      "name": "CommentaryChapter",
+      "columns": [
+        {
+          "name": "number",
+          "type": "INTEGER"
+        },
+        {
+          "name": "bookId",
+          "type": "TEXT"
+        },
+        {
+          "name": "commentaryId",
+          "type": "TEXT"
+        },
+        {
+          "name": "introduction",
+          "type": "TEXT"
+        },
+        {
+          "name": "json",
+          "type": "TEXT"
+        },
+        {
+          "name": "sha256",
+          "type": "TEXT"
+        }
+      ]
+    },
+    {
+      "name": "CommentaryChapterVerse",
+      "columns": [
+        {
+          "name": "number",
+          "type": "INTEGER"
+        },
+        {
+          "name": "chapterNumber",
+          "type": "INTEGER"
+        },
+        {
+          "name": "bookId",
+          "type": "TEXT"
+        },
+        {
+          "name": "commentaryId",
+          "type": "TEXT"
+        },
+        {
+          "name": "text",
+          "type": "TEXT"
+        },
+        {
+          "name": "contentJson",
+          "type": "TEXT"
+        },
+        {
+          "name": "sha256",
+          "type": "TEXT"
+        }
+      ]
+    },
+    {
+      "name": "CommentaryProfile",
+      "columns": [
+        {
+          "name": "id",
+          "type": "TEXT"
+        },
+        {
+          "name": "commentaryId",
+          "type": "TEXT"
+        },
+        {
+          "name": "subject",
+          "type": "TEXT"
+        },
+        {
+          "name": "content",
+          "type": "TEXT"
+        },
+        {
+          "name": "json",
+          "type": "TEXT"
+        },
+        {
+          "name": "sha256",
+          "type": "TEXT"
+        },
+        {
+          "name": "referenceBook",
+          "type": "TEXT"
+        },
+        {
+          "name": "referenceChapter",
+          "type": "INTEGER"
+        },
+        {
+          "name": "referenceEndChapter",
+          "type": "INTEGER"
+        },
+        {
+          "name": "referenceEndVerse",
+          "type": "INTEGER"
+        },
+        {
+          "name": "referenceVerse",
+          "type": "INTEGER"
+        }
+      ]
+    },
+    {
+      "name": "Dataset",
+      "columns": [
+        {
+          "name": "id",
+          "type": "TEXT"
+        },
+        {
+          "name": "name",
+          "type": "TEXT"
+        },
+        {
+          "name": "website",
+          "type": "TEXT"
+        },
+        {
+          "name": "licenseUrl",
+          "type": "TEXT"
+        },
+        {
+          "name": "licenseNotes",
+          "type": "TEXT"
+        },
+        {
+          "name": "englishName",
+          "type": "TEXT"
+        },
+        {
+          "name": "language",
+          "type": "TEXT"
+        },
+        {
+          "name": "textDirection",
+          "type": "TEXT"
+        },
+        {
+          "name": "sha256",
+          "type": "TEXT"
+        }
+      ]
+    },
+    {
+      "name": "DatasetBook",
+      "columns": [
+        {
+          "name": "id",
+          "type": "TEXT"
+        },
+        {
+          "name": "datasetId",
+          "type": "TEXT"
+        },
+        {
+          "name": "order",
+          "type": "INTEGER"
+        },
+        {
+          "name": "numberOfChapters",
+          "type": "INTEGER"
+        },
+        {
+          "name": "sha256",
+          "type": "TEXT"
+        }
+      ]
+    },
+    {
+      "name": "DatasetChapter",
+      "columns": [
+        {
+          "name": "number",
+          "type": "INTEGER"
+        },
+        {
+          "name": "bookId",
+          "type": "TEXT"
+        },
+        {
+          "name": "datasetId",
+          "type": "TEXT"
+        },
+        {
+          "name": "json",
+          "type": "TEXT"
+        },
+        {
+          "name": "sha256",
+          "type": "TEXT"
+        }
+      ]
+    },
+    {
+      "name": "DatasetChapterVerse",
+      "columns": [
+        {
+          "name": "number",
+          "type": "INTEGER"
+        },
+        {
+          "name": "chapterNumber",
+          "type": "INTEGER"
+        },
+        {
+          "name": "bookId",
+          "type": "TEXT"
+        },
+        {
+          "name": "datasetId",
+          "type": "TEXT"
+        },
+        {
+          "name": "contentJson",
+          "type": "TEXT"
+        },
+        {
+          "name": "sha256",
+          "type": "TEXT"
+        }
+      ]
+    },
+    {
+      "name": "DatasetReference",
+      "columns": [
+        {
+          "name": "id",
+          "type": "INTEGER"
+        },
+        {
+          "name": "datasetId",
+          "type": "TEXT"
+        },
+        {
+          "name": "bookId",
+          "type": "TEXT"
+        },
+        {
+          "name": "chapterNumber",
+          "type": "INTEGER"
+        },
+        {
+          "name": "verseNumber",
+          "type": "INTEGER"
+        },
+        {
+          "name": "referenceBookId",
+          "type": "TEXT"
+        },
+        {
+          "name": "referenceChapter",
+          "type": "INTEGER"
+        },
+        {
+          "name": "referenceVerse",
+          "type": "INTEGER"
+        },
+        {
+          "name": "endVerseNumber",
+          "type": "INTEGER"
+        },
+        {
+          "name": "score",
+          "type": "INTEGER"
+        }
+      ]
+    },
+    {
+      "name": "EBibleSource",
+      "columns": [
+        {
+          "name": "id",
+          "type": "TEXT"
+        },
+        {
+          "name": "usfmZipUrl",
+          "type": "TEXT"
+        },
+        {
+          "name": "usfmZipEtag",
+          "type": "TEXT"
+        },
+        {
+          "name": "languageCode",
+          "type": "TEXT"
+        },
+        {
+          "name": "title",
+          "type": "TEXT"
+        },
+        {
+          "name": "redistributable",
+          "type": "BOOLEAN"
+        },
+        {
+          "name": "description",
+          "type": "TEXT"
+        },
+        {
+          "name": "copyright",
+          "type": "TEXT"
+        },
+        {
+          "name": "FCBHID",
+          "type": "TEXT"
+        },
+        {
+          "name": "updateDate",
+          "type": "DATETIME"
+        },
+        {
+          "name": "sourceDate",
+          "type": "DATETIME"
+        },
+        {
+          "name": "oldTestamentBooks",
+          "type": "INTEGER"
+        },
+        {
+          "name": "oldTestamentChapters",
+          "type": "INTEGER"
+        },
+        {
+          "name": "oldTestamentVerses",
+          "type": "INTEGER"
+        },
+        {
+          "name": "newTestamentBooks",
+          "type": "INTEGER"
+        },
+        {
+          "name": "newTestamentChapters",
+          "type": "INTEGER"
+        },
+        {
+          "name": "newTestamentVerses",
+          "type": "INTEGER"
+        },
+        {
+          "name": "apocryphaBooks",
+          "type": "INTEGER"
+        },
+        {
+          "name": "apocryphaChapters",
+          "type": "INTEGER"
+        },
+        {
+          "name": "apocryphaVerses",
+          "type": "INTEGER"
+        },
+        {
+          "name": "translationId",
+          "type": "TEXT"
+        },
+        {
+          "name": "usfmDownloadDate",
+          "type": "DATETIME"
+        },
+        {
+          "name": "sha256",
+          "type": "TEXT"
+        },
+        {
+          "name": "usfmDownloadPath",
+          "type": "TEXT"
+        },
+        {
+          "name": "shortTitle",
+          "type": "TEXT"
+        },
+        {
+          "name": "textDirection",
+          "type": "TEXT"
+        }
+      ]
+    },
+    {
+      "name": "InputFile",
+      "columns": [
+        {
+          "name": "translationId",
+          "type": "TEXT"
+        },
+        {
+          "name": "name",
+          "type": "TEXT"
+        },
+        {
+          "name": "format",
+          "type": "TEXT"
+        },
+        {
+          "name": "sha256",
+          "type": "TEXT"
+        },
+        {
+          "name": "sizeInBytes",
+          "type": "INTEGER"
+        }
+      ]
+    },
+    {
+      "name": "InputFileWarning",
+      "columns": [
+        {
+          "name": "name",
+          "type": "TEXT"
+        },
+        {
+          "name": "type",
+          "type": "TEXT"
+        },
+        {
+          "name": "message",
+          "type": "TEXT"
+        }
+      ]
+    },
+    {
+      "name": "Translation",
+      "columns": [
+        {
+          "name": "id",
+          "type": "TEXT"
+        },
+        {
+          "name": "name",
+          "type": "TEXT"
+        },
+        {
+          "name": "website",
+          "type": "TEXT"
+        },
+        {
+          "name": "licenseUrl",
+          "type": "TEXT"
+        },
+        {
+          "name": "shortName",
+          "type": "TEXT"
+        },
+        {
+          "name": "englishName",
+          "type": "TEXT"
+        },
+        {
+          "name": "language",
+          "type": "TEXT"
+        },
+        {
+          "name": "textDirection",
+          "type": "TEXT"
+        },
+        {
+          "name": "sha256",
+          "type": "TEXT"
+        },
+        {
+          "name": "licenseNotes",
+          "type": "TEXT"
+        },
+        {
+          "name": "licenseNotice",
+          "type": "TEXT"
+        }
+      ]
+    },
+    {
+      "name": "_prisma_migrations",
+      "columns": [
+        {
+          "name": "id",
+          "type": "TEXT"
+        },
+        {
+          "name": "checksum",
+          "type": "TEXT"
+        },
+        {
+          "name": "finished_at",
+          "type": "DATETIME"
+        },
+        {
+          "name": "migration_name",
+          "type": "TEXT"
+        },
+        {
+          "name": "logs",
+          "type": "TEXT"
+        },
+        {
+          "name": "rolled_back_at",
+          "type": "DATETIME"
+        },
+        {
+          "name": "started_at",
+          "type": "DATETIME"
+        },
+        {
+          "name": "applied_steps_count",
+          "type": "INTEGER UNSIGNED"
+        }
+      ]
+    }
+  ],
+  "fingerprint": "284350834d29b9de8f2d480b10751e1292b56c79879126df06bc1e766da7657d"
+}

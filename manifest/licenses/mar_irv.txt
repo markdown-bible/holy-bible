@@ -1,0 +1,5 @@
+Copied from HelloAO bible.db; db sha256 8e3d7faec7d0cf15b7a289ddb2de6d13717e645600026491ee6759319073a6e1
+
+Translation: इंडियन रीवाइज्ड वर्जन (IRV) - मराठी (mar_irv)
+License URL: https://ebible.org/Scriptures/details.php?id=mar
+
